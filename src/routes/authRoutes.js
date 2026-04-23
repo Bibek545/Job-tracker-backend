@@ -1,5 +1,6 @@
 import express from "express";
 import { insertNewUser, loginUser } from "../controllers/authController.js";
+import { authValidation } from "../middleware/validation/authValidation.js";
 
 const router = express.Router();
 

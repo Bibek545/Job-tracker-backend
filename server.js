@@ -2,6 +2,8 @@ import express from "express"
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import authRoutes from "./src/routes/authRoutes.js";
+import jobRoutes from "./src/routes/jobRoutes.js";
+
 
 dotenv.config();
 
@@ -19,6 +21,7 @@ app.use(express.json());
 
 //connecting routes
 app.use("/api/v1/auth", authRoutes)
+app.use("/api/v1/auth", jobRoutes)
 
 app.get('/', (req, res) => {
     res.send("The job tracker backend is live")
