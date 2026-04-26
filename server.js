@@ -21,7 +21,7 @@ app.use(express.json());
 
 //connecting routes
 app.use("/api/v1/auth", authRoutes)
-app.use("/api/v1/auth", jobRoutes)
+app.use("/api/v1/jobs", jobRoutes)
 
 app.get('/', (req, res) => {
     res.send("The job tracker backend is live")
