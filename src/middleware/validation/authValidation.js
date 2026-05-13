@@ -10,11 +10,17 @@ export const authValidation = (req, res, next) => {
     //2. checking header is preseent
     if (!authHeader) {
       //   const token = authorization.split("")
-      return res.send("Missig authorisation header");
+      return res.status(401).json({
+          status: "error",
+          message: "Missig authorisation header",
+      })
     }
     // 3. check Bearer format
     if (!authHeader.startsWith("Bearer ")) {
-      return res.send("Missiing Bearer");
+      return res.status(401).json({
+        status: "error",
+        message: "Missiing Bearer"
+      });
     }
 
     //4. Extracting token
@@ -30,6 +36,9 @@ export const authValidation = (req, res, next) => {
     //7.continue
     return next();
   } catch (error) {
-    return res.send("Invalid or expired token");
+    return res.status(401).json({
+      status: "error",
+      message: "Invalid or expired token",
+    })
   }
 };

@@ -1,5 +1,6 @@
 import express from "express"
 import mongoose from "mongoose";
+import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./src/routes/authRoutes.js";
 import jobRoutes from "./src/routes/jobRoutes.js";
@@ -17,7 +18,11 @@ mongoose.connect(process.env.MONGODB_URL)
 .catch((error) => console.log("Error while connecting to mongodb", error));
 
 //basic middleware
+app.use(cors({
+    origin: "http://localhost:5173",
+}))
 app.use(express.json());
+;
 
 //connecting routes
 app.use("/api/v1/auth", authRoutes)

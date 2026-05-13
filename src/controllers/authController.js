@@ -10,12 +10,18 @@ export const insertNewUser = async (req, res) => {
   const { fName, lName, email, password } = req.body;
   // 2.validating the missing fields
   if (!fName || !lName || !email || !password) {
-    return res.send("Error missing field");
+    return res.status(400).json({
+      status: "error",
+      message: "Missing field",
+    })
   }
   // 3.checking if the duplicate user exist or not
   const existingUser = await User.findOne({ email: email });
   if (existingUser) {
-    return res.send("Duplicate user");
+    return res.status(409).json({
+      status: "error",
+      message: "Duplicate user"
+    })
   }
   // 4.hash the password
   const hashedPassword = await hashPassword(password);
@@ -32,7 +38,10 @@ export const insertNewUser = async (req, res) => {
   console.log("User created successfully");
 
   // 7. response
-  return res.send("User created successfully");
+  return res.status(201).json({
+    status: "success",
+    message: "User created successfully",
+  });
 };
 
 export const loginUser = async (req, res) => {
@@ -42,19 +51,29 @@ export const loginUser = async (req, res) => {
   // 2.validating the missing field
 
   if (!email || !password) {
-    return res.send("Missing field");
+    return res.status(400).json({
+      status: "error",
+      message: "Missing Fields"
+
+    })
   }
 
   // 3.finding the user by email
   const findUser = await User.findOne({ email });
   if (!findUser) {
-    return res.send("Error, user not found");
+    return res.status(201).json({
+      status: "error",
+      message: "Error, user not found"
+    })
   }
 
   //4. comparing the password with stored password
   const findPassword = await comparePassword(password, findUser.password);
   if (!findPassword) {
-    return res.send("Password doesnot match");
+    return res.status(201).json({
+      status: "error",
+      message: "Password doesnot match "
+    })
   }
 
   const token = generateToken(findUser);
@@ -62,5 +81,6 @@ export const loginUser = async (req, res) => {
   return res.send({
     message: "Login successful",
     token,
+    status: "success"
   });
 };
