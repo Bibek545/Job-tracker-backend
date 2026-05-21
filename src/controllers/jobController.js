@@ -6,7 +6,18 @@ export const createNewJobController = async (req, res) => {
     const { companyName, jobTitle, status, ...rest } = req.body;
     const userId = req.user.id;
     if (!companyName || !jobTitle || !status) {
-      return res.send("Error missing fields");
+      return res.status(400).json({
+        status: "error",
+        message: "Error missing fields",
+      });
+    }
+
+    const exisitingJob = await Job.findOne({ companyName, jobTitle, userId });
+    if (exisitingJob) {
+      return res.status(409).json({
+        status: "error",
+        message: "Job already added",
+      });
     }
 
     const jobObj = {
@@ -18,9 +29,15 @@ export const createNewJobController = async (req, res) => {
     };
 
     await createNewJob(jobObj);
-    return res.send("Job has been created successfully");
+    return res.status(200).json({
+      status: "success",
+      message: "Job has been created successfully",
+    });
   } catch (error) {
-    return res.send("Unable to create the job");
+    return res.status(400).json({
+      status: "error",
+      message: "Unable to create the job",
+    });
   }
 };
 
@@ -29,12 +46,23 @@ export const fetchJobController = async (req, res) => {
     const userId = req.user.id;
     const jobs = await Job.find({ userId });
     if (!jobs.length) {
-      return res.send("No Jobs found");
+      return res.status(400).json({
+        status: "error",
+        message: "No jobs found",
+      });
     }
 
-    return res.send(jobs);
+    // return res.send(jobs);
+    return res.status(200).json({
+      status: "success",
+      message: "Here are all the jobs",
+      jobs,
+    });
   } catch (error) {
-    return res.send("Error fetching jobs");
+    return res.status(400).json({
+      status: "error",
+      message: "Error fetching jobs",
+    });
   }
 };
 
@@ -62,10 +90,10 @@ export const updateJobController = async (req, res) => {
     const updatedData = { ...req.body };
     delete updatedData.userId;
     console.log("params:", req.params);
-console.log("jobId:", jobId);
-console.log("userId:", userId);
-console.log("updatedData:", updatedData);
-    const updatedJob = await updateJob(jobId, userId,  updatedData);
+    console.log("jobId:", jobId);
+    console.log("userId:", userId);
+    console.log("updatedData:", updatedData);
+    const updatedJob = await updateJob(jobId, userId, updatedData);
     if (!updatedJob) {
       return res.status(404).json({ message: "Job not found" });
     }
