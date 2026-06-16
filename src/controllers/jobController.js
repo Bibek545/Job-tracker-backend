@@ -46,7 +46,7 @@ export const fetchJobController = async (req, res) => {
     const userId = req.user.id;
     const jobs = await Job.find({ userId });
     if (!jobs.length) {
-      return res.status(400).json({
+      return res.status(200).json({
         status: "error",
         message: "No jobs found",
       });
@@ -56,7 +56,7 @@ export const fetchJobController = async (req, res) => {
     return res.status(200).json({
       status: "success",
       message: "Here are all the jobs",
-      jobs,
+      payload: jobs,
     });
   } catch (error) {
     return res.status(400).json({
@@ -75,17 +75,26 @@ export const deleteJobController = async (req, res) => {
 
     const deletedJob = await deleteJob(_id);
     if (!deletedJob) {
-      return res.send("Error finding the job");
+      return res.status(400).json({
+        status: "error",
+        message: "Error finding the job",
+      });
     }
-    return res.send("Job deleted successfully");
+    return res.status(200).json({
+      status: "success",
+      message: "Job deleted successfully",
+    });
   } catch (error) {
-    return res.send("Error deleting the job");
+    return res.status(401).json({
+      status: "error",
+      message: "Etror deleting the job",
+    });
   }
 };
 
 export const updateJobController = async (req, res) => {
   try {
-    const jobId = req.params.id;
+    const jobId = req.params._id;
     const userId = req.user.id;
     const updatedData = { ...req.body };
     delete updatedData.userId;
@@ -95,15 +104,22 @@ export const updateJobController = async (req, res) => {
     console.log("updatedData:", updatedData);
     const updatedJob = await updateJob(jobId, userId, updatedData);
     if (!updatedJob) {
-      return res.status(404).json({ message: "Job not found" });
+      return res.status(200).json({
+        status: "error",
+        message: "Job not found",
+      });
     }
 
-    return res
-      .status(200)
-      .json({ message: " Job updated successfully", job: updatedJob });
+    return res.status(200).json({
+      status: "success",
+      message: " Job updated successfully",
+      job: updatedJob,
+    });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Error updating the job", error: error.message });
+    return res.status(500).json({
+        status: "error",
+        message: "Error updating the job",
+        error: error.message,
+      });
   }
 };

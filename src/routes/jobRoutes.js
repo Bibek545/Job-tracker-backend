@@ -11,10 +11,10 @@ router.post("/",authValidation ,createNewJobController);
 router.get("/", authValidation, fetchJobController)
 
 //deleteing the job
-router.delete("/:id", authValidation, deleteJobController)
+router.delete("/:_id", authValidation, deleteJobController)
 
 //updating the job
-router.patch("/:id", authValidation, updateJobController)
+router.patch("/:_id", authValidation, updateJobController)
 
 
 
