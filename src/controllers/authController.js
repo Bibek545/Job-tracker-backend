@@ -81,6 +81,7 @@ export const loginUser = async (req, res) => {
   return res.send({
     message: "Login successful",
     token,
-    status: "success"
+    status: "success",
+    findUser,
   });
 };
