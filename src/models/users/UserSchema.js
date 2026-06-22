@@ -28,6 +28,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       // required: true,
     },
+    location: {
+      type: String,
+    },
+    phone: {
+      type: String,
+    }
   },
   {
     timestamps: true,

@@ -1,6 +1,10 @@
 import { comparePassword, hashPassword } from "../config/bcrypt.js";
 import { generateToken } from "../config/jwt.js";
-import { createNewUser } from "../models/users/UserModel.js";
+import {
+  createNewUser,
+  getUser,
+  updateUser,
+} from "../models/users/UserModel.js";
 import User from "../models/users/UserSchema.js";
 
 export const insertNewUser = async (req, res) => {
@@ -13,15 +17,15 @@ export const insertNewUser = async (req, res) => {
     return res.status(400).json({
       status: "error",
       message: "Missing field",
-    })
+    });
   }
   // 3.checking if the duplicate user exist or not
   const existingUser = await User.findOne({ email: email });
   if (existingUser) {
     return res.status(409).json({
       status: "error",
-      message: "Duplicate user"
-    })
+      message: "Duplicate user",
+    });
   }
   // 4.hash the password
   const hashedPassword = await hashPassword(password);
@@ -53,9 +57,8 @@ export const loginUser = async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({
       status: "error",
-      message: "Missing Fields"
-
-    })
+      message: "Missing Fields",
+    });
   }
 
   // 3.finding the user by email
@@ -63,8 +66,8 @@ export const loginUser = async (req, res) => {
   if (!findUser) {
     return res.status(201).json({
       status: "error",
-      message: "Error, user not found"
-    })
+      message: "Error, user not found",
+    });
   }
 
   //4. comparing the password with stored password
@@ -72,10 +75,9 @@ export const loginUser = async (req, res) => {
   if (!findPassword) {
     return res.status(201).json({
       status: "error",
-      message: "Password doesnot match "
-    })
+      message: "Password doesnot match ",
+    });
   }
-
   const token = generateToken(findUser);
 
   return res.send({
@@ -84,4 +86,122 @@ export const loginUser = async (req, res) => {
     status: "success",
     findUser,
   });
+};
+
+export const getUserProfilerController = async (req, res) => {
+  try {
+    const user = req.user.id;
+    const result = await getUser(user);
+    if (!result) {
+      return res.status(200).json({
+        status: "error",
+        message: "Profile could not be found",
+      });
+    }
+
+    return res.status(200).json({
+      status: "success",
+      message: "Here, is your profile",
+      payload: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
+export const updatePasswordController = async (req, res) => {
+  try {
+    // 1.get passsword, new password and confirm password from the body
+    const { password, newPassword, confirmPassword } = req.body;
+
+    // 2. getting the user from the user.id
+    const user = req.user.id;
+    console.log(user);
+    const result = await getUser(user);
+    if (!password || !newPassword || !confirmPassword) {
+      return res.status(200).json({
+        status: "error",
+        message: "All fields are",
+      });
+    }
+    if (!result) {
+      return res.status(200).json({
+        status: "error",
+        message: "Profile could not be found",
+      });
+    }
+
+    // comparing the old password with hashedpassword
+    const compareNewPassword = await comparePassword(password, result.password);
+    if (!compareNewPassword) {
+      return res.status(200).json({
+        status: "error",
+        message: "Password doesnot match",
+      });
+    }
+    //  4.comparing new password with confirm password
+    if (newPassword !== confirmPassword) {
+      return res.status(200).json({
+        status: "error",
+        message: "new password doesnot match with confirm password",
+      });
+    }
+
+    // 5.creating a newhashedpassword using the new password given by user
+    const newHashedPassword = await hashPassword(newPassword);
+
+    // 6.creating a obj to update in db and update user
+    const obj = {
+      password: newHashedPassword,
+    };
+
+    await updateUser(user, obj);
+    // 7.success message
+    return res.status(200).json({
+      status: "success",
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    // 8.error handling
+    return res.status(402).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
+export const updateUserProfile = async (req, res) => {
+  try {
+    const { fName, lName, location, phone } = req.body;
+
+    const user = req.user.id;
+    if (!fName || !lName || !location || !phone) {
+      return res.status(400).json({
+        status: "error",
+        message: "All fields are required",
+      });
+    }
+
+    const obj = {
+      fName,
+      lName,
+      location,
+      phone,
+    };
+
+    const updatedUser = await updateUser(user, obj);
+    return res.status(200).json({
+      status: "success",
+      message: "Profile Updated Successfully",
+    });
+  } catch (error) {
+    return res.status(401).json({
+      status: "error",
+      message: error.message,
+      user: updatedUser,
+    });
+  }
 };

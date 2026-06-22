@@ -1,5 +1,5 @@
 import express from "express";
-import { insertNewUser, loginUser } from "../controllers/authController.js";
+import { getUserProfilerController, insertNewUser, loginUser, updatePasswordController, updateUserProfile } from "../controllers/authController.js";
 import { authValidation } from "../middleware/validation/authValidation.js";
 
 const router = express.Router();
@@ -12,5 +12,11 @@ router.post("/login", loginUser)
 // router.post("/login", (req, res) => {
 //   return res.send("LOGIN ROUTE HIT");
 // });
+
+router.get("/profile", authValidation ,getUserProfilerController)
+
+router.patch("/update-password", authValidation, updatePasswordController)
+
+router.patch("/update-profile", authValidation, updateUserProfile )
 
 export default router;
