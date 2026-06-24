@@ -15,8 +15,4 @@ router.delete("/:_id", authValidation, deleteJobController)
 
 //updating the job
 router.patch("/:_id", authValidation, updateJobController)
-
-
-
-
 export default router;

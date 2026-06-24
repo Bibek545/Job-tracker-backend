@@ -1,5 +1,7 @@
 import { comparePassword, hashPassword } from "../config/bcrypt.js";
 import { generateToken } from "../config/jwt.js";
+import { generateBasicOTP } from "../config/randomGenerate.js";
+import { createOTP } from "../models/otp/otpModel.js";
 import {
   createNewUser,
   getUser,
@@ -202,6 +204,49 @@ export const updateUserProfile = async (req, res) => {
       status: "error",
       message: error.message,
       user: updatedUser,
+    });
+  }
+};
+
+export const forgotPasswordController = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(404).json({
+        status: "error",
+        message: "Email is required",
+      });
+    }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "User not found",
+      });
+    }
+      const otp = generateBasicOTP();
+      let expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+      // if(!expiresAt) {
+      //   return res.status(403).json({
+      //     status: "error",
+      //     message: "Your otp expired, try again"
+      //   });
+      // }
+      const result = await createOTP({
+        email,
+        otp,
+        expiresAt,
+      });
+
+      return res.status(200).json({
+        status: "success",
+        message: " OTP generated successfully",
+        // result,
+      });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: error.message,
     });
   }
 };
