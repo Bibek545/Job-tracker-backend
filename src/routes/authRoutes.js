@@ -1,5 +1,5 @@
 import express from "express";
-import { forgotPasswordController, getUserProfilerController, insertNewUser, loginUser, updatePasswordController, updateUserProfile } from "../controllers/authController.js";
+import { getUserProfilerController, insertNewUser, loginUser, otpGenerateController, resetPasswordController, updatePasswordController, updateUserProfile } from "../controllers/authController.js";
 import { authValidation } from "../middleware/validation/authValidation.js";
 
 const router = express.Router();
@@ -19,6 +19,9 @@ router.patch("/update-password", authValidation, updatePasswordController)
 
 router.patch("/update-profile", authValidation, updateUserProfile )
 
-router.post("/forgot-password", forgotPasswordController)
+router.post("/forgot-password", otpGenerateController)
+
+router.post("/reset-password", resetPasswordController)
+
 
 export default router;

@@ -1,7 +1,7 @@
 import { comparePassword, hashPassword } from "../config/bcrypt.js";
 import { generateToken } from "../config/jwt.js";
 import { generateBasicOTP } from "../config/randomGenerate.js";
-import { createOTP } from "../models/otp/otpModel.js";
+import { createOTP, deleteOTP, getOTPByEmail } from "../models/otp/otpModel.js";
 import {
   createNewUser,
   getUser,
@@ -208,7 +208,7 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
-export const forgotPasswordController = async (req, res) => {
+export const otpGenerateController = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
@@ -224,27 +224,112 @@ export const forgotPasswordController = async (req, res) => {
         message: "User not found",
       });
     }
-      const otp = generateBasicOTP();
-      let expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-      // if(!expiresAt) {
-      //   return res.status(403).json({
-      //     status: "error",
-      //     message: "Your otp expired, try again"
-      //   });
-      // }
-      const result = await createOTP({
-        email,
-        otp,
-        expiresAt,
-      });
+    const otp = generateBasicOTP();
+    let expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    // if(!expiresAt) {
+    //   return res.status(403).json({
+    //     status: "error",
+    //     message: "Your otp expired, try again"
+    //   });
+    // }
+    const result = await createOTP({
+      email,
+      otp,
+      expiresAt,
+    });
 
-      return res.status(200).json({
-        status: "success",
-        message: " OTP generated successfully",
-        // result,
-      });
+    return res.status(200).json({
+      status: "success",
+      message: " OTP generated successfully",
+      result,
+    });
   } catch (error) {
     return res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
+export const resetPasswordController = async (req, res) => {
+  try {
+    //1.fetching the field from the body
+    const { email, otp, newPassword, confirmNewPassword } = req.body;
+
+    //2.checking if there is a missing field
+    if (!email || !otp || !newPassword || !confirmNewPassword) {
+      return res.status(404).json({
+        status: "error",
+        message: "Missing fields",
+      });
+    }
+
+    //3.findning a user by email
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "No user found",
+      });
+    }
+
+    //4.fetching saved otp from db
+    const savedOTP = await getOTPByEmail(email);
+    console.log(savedOTP);
+    console.log(otp);
+    if (!savedOTP) {
+      return res.status(400).json({
+        status: "error",
+        message: "OTP not found. Please request a new OTP.",
+      });
+    }
+
+  
+
+    //6. compparing the saved otp with otp given by the user
+    if (otp !== savedOTP.otp) {
+      return res.status(400).json({
+        status: "error",
+        message: "OTP doesnt match",
+      });
+    }
+
+    //7.comparing the expiry date
+    if (Date.now() > savedOTP.expiresAt.getTime()) {
+      await deleteOTP(email);
+
+      return res.status(400).json({
+        status: "error",
+        message: "OTP has expired",
+      });
+    }
+
+    //8.checking if the newPassword matches with confirmNewPassword
+    if (newPassword !== confirmNewPassword) {
+      return res.status(404).json({
+        status: "error",
+        messaage: "Password doesnt match",
+      });
+    }
+
+    //9.hashinng the new password
+    const updatedHashedPass = await hashPassword(newPassword);
+
+    //10.updated the user in the db
+    const updatedResult = await updateUser(user._id, {
+      password: updatedHashedPass,
+    });
+
+    //11.deleting the saved otp
+    await deleteOTP(email);
+
+    //12.returning the success message
+    return res.status(201).json({
+      status: "success",
+      message: "Password has been updated, please login",
+    });
+  } catch (error) {
+    return res.status(404).json({
       status: "error",
       message: error.message,
     });
