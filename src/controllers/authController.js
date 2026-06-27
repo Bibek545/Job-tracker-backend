@@ -1,6 +1,7 @@
 import { comparePassword, hashPassword } from "../config/bcrypt.js";
 import { generateToken } from "../config/jwt.js";
 import { generateBasicOTP } from "../config/randomGenerate.js";
+import { passwordResetOTPEmail } from "../helper/emailService.js";
 import { createOTP, deleteOTP, getOTPByEmail } from "../models/otp/otpModel.js";
 import {
   createNewUser,
@@ -224,23 +225,26 @@ export const otpGenerateController = async (req, res) => {
         message: "User not found",
       });
     }
+    await deleteOTP(email);
+
     const otp = generateBasicOTP();
     let expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-    // if(!expiresAt) {
-    //   return res.status(403).json({
-    //     status: "error",
-    //     message: "Your otp expired, try again"
-    //   });
-    // }
+
     const result = await createOTP({
       email,
       otp,
       expiresAt,
     });
 
+    const info = await passwordResetOTPEmail({
+      email,
+      name: user.fName,
+      otp,
+    });
+
     return res.status(200).json({
       status: "success",
-      message: " OTP generated successfully",
+      message: " OTP generated successfully and has been sent to your email",
       result,
     });
   } catch (error) {
@@ -283,8 +287,6 @@ export const resetPasswordController = async (req, res) => {
         message: "OTP not found. Please request a new OTP.",
       });
     }
-
-  
 
     //6. compparing the saved otp with otp given by the user
     if (otp !== savedOTP.otp) {

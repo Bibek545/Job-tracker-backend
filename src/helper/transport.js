@@ -1,9 +1,10 @@
 import nodemailer from "nodemailer"
-const nodemailer = require("nodemailer");
+// const nodemailer = require("nodemailer");
 
 //creating a transporter using SMTP
-export const transporter = nodemailer.createTransport({
-    host: "smtp.exaample.com",
+export const emailTransporter = () => {
+  let transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
     port: 587,
     secure: false,
     auth: {
@@ -12,9 +13,12 @@ export const transporter = nodemailer.createTransport({
     },
 });
 
-try {
-  await transporter.verify();
-  console.log("Server is ready to send the messages")
-} catch (error) {
-    console.error("Verification failed: ", error)
+    transporter.verify((err, success) => {
+  if (err) {
+    console.error("❌ SMTP login failed:", err.message);
+  } else {
+    console.log("✅ SMTP connection verified");
+  }
+});
+    return transporter;
 }
