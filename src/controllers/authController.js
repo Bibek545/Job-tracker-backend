@@ -211,6 +211,7 @@ export const updateUserProfile = async (req, res) => {
 
 export const otpGenerateController = async (req, res) => {
   try {
+    console.log(req.body)
     const { email } = req.body;
     if (!email) {
       return res.status(404).json({
@@ -218,7 +219,7 @@ export const otpGenerateController = async (req, res) => {
         message: "Email is required",
       });
     }
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email });
     if (!user) {
       return res.status(404).json({
         status: "error",
@@ -258,10 +259,10 @@ export const otpGenerateController = async (req, res) => {
 export const resetPasswordController = async (req, res) => {
   try {
     //1.fetching the field from the body
-    const { email, otp, newPassword, confirmNewPassword } = req.body;
+    const { email, otp, newPassword, confirmPassword } = req.body;
 
     //2.checking if there is a missing field
-    if (!email || !otp || !newPassword || !confirmNewPassword) {
+    if (!email || !otp || !newPassword || !confirmPassword) {
       return res.status(404).json({
         status: "error",
         message: "Missing fields",
@@ -307,7 +308,7 @@ export const resetPasswordController = async (req, res) => {
     }
 
     //8.checking if the newPassword matches with confirmNewPassword
-    if (newPassword !== confirmNewPassword) {
+    if (newPassword !== confirmPassword) {
       return res.status(404).json({
         status: "error",
         messaage: "Password doesnt match",
