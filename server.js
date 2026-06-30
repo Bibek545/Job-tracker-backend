@@ -20,7 +20,7 @@ mongoose.connect(process.env.MONGODB_URL)
 //basic middleware
 app.use(cors({
     origin: "http://localhost:5173",
-    origin: "https://job-tracker-jet-six.vercel.app/",
+    origin: "https://job-tracker-jet-six.vercel.app",
 }))
 app.use(express.json());
 ;
